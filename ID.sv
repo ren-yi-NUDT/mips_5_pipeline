@@ -39,6 +39,8 @@ assign FunctD = InstrD[5:0];         // 提取功能码（仅R型指令有效）
 
 // -------------------- 实例化子模块 --------------------
 logic [31:0] Rd1, Rd2;  // regfile读端口输出
+logic [31:0] tmpSignImmD, tmpUnsignImmD;
+logic LogicOpImm;
 regfile rf(
     .clk(CLK),
     .we3(RegWriteW),        
@@ -59,11 +61,6 @@ aludec alu_dec(
 );
 
 
-assign SignImmD = {{16{InstrD[15]}}, InstrD[15:0]};
-
-
-assign PCBranchD = PCPlus4D + (SignImmD << 2);
-
 // -------------------- 生成译码阶段控制信号 --------------------
 // 基于opcode生成RegWriteD/MemtoRegD/MemWriteD/ALUSrcD/RegDstD
 // 覆盖所有目标指令：lw/sw/addi/beq/bne/andi/ori/R型(add/sub/and/or/xor/slt) + jr
@@ -78,6 +75,7 @@ always_comb begin
     BranchNED = 1'b0;  // 新增：默认非bne指令
     BranchEQD = 1'b0;  // 新增：默认非beq指令
     JumpRegD  = 1'b0;  // 新增：默认非jr指令
+    LogicOpImm = 1'b0;
 
     case(OpcodeD)
         6'b100011: begin  // lw（加载字）
@@ -96,10 +94,12 @@ always_comb begin
         6'b001100: begin  // andi（立即数与）
             RegWriteD = 1'b1;  // 写寄存器
             ALUSrcD   = 1'b1;  // ALU源B为立即数
+            LogicOpImm = 1'b1;
         end
         6'b001101: begin  // ori（立即数或）
             RegWriteD = 1'b1;  // 写寄存器
             ALUSrcD   = 1'b1;  // ALU源B为立即数
+            LogicOpImm = 1'b1;
         end
         6'b000100: begin  // beq（相等分支）
             BranchD   = 1'b1;  // 标识为分支指令
@@ -127,6 +127,12 @@ end
 
 assign SrcAD = ForwardAD ? ALUOutM : Rd1;
 assign SrcBD = ForwardBD ? ALUOutM : Rd2;
+
+assign tmpSignImmD = {{16{InstrD[15]}}, InstrD[15:0]};
+assign tmpUnsignImmD = {16'b0, InstrD[15:0]};
+assign SignImmD = LogicOpImm ? tmpUnsignImmD : tmpSignImmD;
+
+assign PCBranchD = PCPlus4D + (tmpSignImmD << 2);
 
 // 新增：jr跳转目标地址 = 处理转发后的rs寄存器值（SrcAD）
 assign JRTargetD = SrcAD;
