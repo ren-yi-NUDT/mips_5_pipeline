@@ -121,29 +121,30 @@ endmodule
 
 
 // 自己看仿真用注释的一版，自己写的不心疼，给助教看用上面ai写的就行
-// module tb();
+module tb;
 
-// logic CLK=0, reset=0;
-// logic[31:0]out[4:0];
-// logic [31:0] PCPlus4F = 32'b0, InstrD = 32'b0, PCBranchD, SrcAD, SrcBD;
-// logic StallF, StallD, FlushE, ForwardAD, ForwardBD, BranchD, PCSrcD;
-// datapath dp(.CLK(CLK), .reset(reset), .out(out), .InstrD(InstrD), .PCPlus4F(PCPlus4F), .StallF(StallF), .StallD(StallD), .FlushE(FlushE), .ForwardAD(ForwardAD), .ForwardBD(ForwardBD), .BranchD(BranchD), .PCSrcD(PCSrcD), .PCBranchD(PCBranchD),
-// .SrcAD(SrcAD), .SrcBD(SrcBD)
-// );
+logic CLK=0, reset=0;
+logic[31:0]out[4:0];
+logic [31:0] PCPlus4F = 32'b0, InstrD = 32'b0, PCBranchD, SrcAD, SrcBD;
+logic StallF, StallD, FlushE, ForwardAD, ForwardBD, BranchD, PCSrcD;
+datapath dp(.CLK(CLK), .reset(reset), .out(out), .InstrD(InstrD), .PCPlus4F(PCPlus4F), .StallF(StallF), .StallD(StallD), .FlushE(FlushE), .ForwardAD(ForwardAD), .ForwardBD(ForwardBD), .BranchD(BranchD), .PCSrcD(PCSrcD), .PCBranchD(PCBranchD),
+.SrcAD(SrcAD), .SrcBD(SrcBD)
+);
 
-// initial begin
-//     reset = 1;
-//     #20;
-//     reset = 0;
-//     #10;
-// end
+initial begin
+    reset = 1;
+    #20;
+    reset = 0;
+    #10;
+end
 
-// always begin
-//     CLK = 1; #5;
-//     CLK = 0; #5;
-// end
+always begin
+    CLK = 1; #5;
+    CLK = 0; #5;
+end
 
-// endmodule
+
+endmodule
 
 
 

@@ -11,7 +11,7 @@ logic CLK = 0;
 always_ff @ (posedge clk_pre) begin
    cnt_peri <= cnt_peri + 1;
    cnt_disp <= cnt_disp + 1;
-   if (cnt_peri == 1000000) begin 
+   if (cnt_peri == 5000000) begin 
        cnt_peri <= 0;
        CLK <= CLK ^ 1;
 	end
