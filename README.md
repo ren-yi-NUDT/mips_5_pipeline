@@ -2,7 +2,7 @@
  
 实现了一个5级流水线的MIPS处理器，可以通过Forwarding-Stall-Flush处理冲突
 
-支持的指令集包括： lw、sw、beq、addi、add、sub、and、or、slt、bne、andi、ori、xor、xori、jr
+支持的指令包括： lw、sw、beq、addi、add、sub、and、or、slt、bne、andi、ori、xor、xori、jr
 
 如果需要其他的指令可以自行修改添加
 
@@ -42,4 +42,5 @@
     32'h00E00008,  // RAM[19]：jr $7          → 跳转到RAM[20]（多跳1行，无越界）
     32'h00000000   // RAM[20]：nop            → 程序正常结束
 ```
+
 
