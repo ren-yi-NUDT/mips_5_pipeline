@@ -27,7 +27,7 @@ module tb_cpu_datapath;
     parameter     SIM_DUR      = 1000;
     parameter     REG_NUM      = 5;
     // Expected output values
-    logic [31:0]  EXPECTED_OUT[4:0] = '{14, 13, 13, 15, 80};
+    logic [31:0]  EXPECTED_OUT[0:4] = '{14, 13, 13, 15, 80};
 
     // ====================== 3. DUT Instantiation ======================
     datapath dp (
