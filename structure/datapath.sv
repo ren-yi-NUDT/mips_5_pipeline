@@ -147,7 +147,7 @@ always_comb begin
     // 新增：jr跳转触发stall（和分支/加载冒险逻辑一致）
     StallF = (lwstall | branchstall | JumpRegD);
     StallD = (lwstall | branchstall | JumpRegD);
-    FlushE = (lwstall | branchstall | PCSrcD | JumpRegD);
+    FlushE = (lwstall | branchstall | JumpRegD);
 end 
 
 

@@ -17,7 +17,7 @@ module regfile(input logic clk,
 	// register 0 hardwired to0
 	// note:for pipelined processor,write third port on falling edge of clk
 	// 来自课本可复用代码
-	always_ff@(posedge clk)
+	always_ff@(negedge clk)
 		if (we3)
 			rf[wa3] <= wd3;
 
