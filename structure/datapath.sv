@@ -138,10 +138,8 @@ always_comb begin
 
     lwstall = ((RsD == RtE) || (RtD == RtE)) && MemtoRegE;
 
-    ForwardAD = (RsD != 0) && (RsD == WriteRegM) && RegWriteM || 
-        (RsD != 0) && (RsD == WriteRegE) && RegWriteE;
-    ForwardBD = (RtD != 0) && (RtD == WriteRegM) && RegWriteM ||
-        (RtD != 0) && (RtD == WriteRegE) && RegWriteE;
+    ForwardAD = (RsD != 0) && (RsD == WriteRegM) && RegWriteM;
+    ForwardBD = (RtD != 0) && (RtD == WriteRegM) && RegWriteM;
 
     branchstall = (BranchEQD | BranchNED) && RegWriteE && (WriteRegE == RsD || WriteRegE == RtD) 
                 || (BranchEQD | BranchNED) && MemtoRegM && (WriteRegM == RsD || WriteRegM == RtD);
