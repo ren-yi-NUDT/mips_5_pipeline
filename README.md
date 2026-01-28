@@ -1,4 +1,6 @@
 ﻿# mips_5_pipeline
+
+## Overview
  
 实现了一个5级流水线的MIPS处理器，可以通过Forwarding-Stall-Flush处理冲突
 
@@ -6,14 +8,13 @@
 
 如果需要其他的指令可以自行修改添加
 
-all_module文件夹可直接放入Xilinx Vivado中进行综合、实现、仿真（注意需将tb设置为simulation only）
-structure文件夹按逻辑对模块进行了分类，方便查看和修改
+all_module文件夹可直接放入Xilinx Vivado中进行综合、实现、仿真；structure文件夹按逻辑对模块进行了分类，方便查看和修改
 
 注意testbench.sv需设置为simulation only
 
-当需要上板验证时，加上top模块，并将IF模块改为无pc限位版
+- 当需要上板验证时，加上top模块，并将IF模块改为无pc限位版
 
-当不需要上板验证、只需要仿真波形时，将top模块去掉，将IF模块改为pc限位版
+- 当不需要上板验证、只需要仿真波形时，将top模块去掉，将IF模块改为pc限位版
 
 
 ## 结构
@@ -28,6 +29,7 @@ structure文件夹按逻辑对模块进行了分类，方便查看和修改
 各模块分开设计，共IF、ID、EX、MEM、WB五个模块，使用datapath对各模块进行连接并处理冲突，top上板用，tb仿真用
 
 另外单独设计了寄存器，数据存储器，指令存储器，ALUdec四个子模块，子模块均可复用
+
 ## 测试指令集
  ```
     32'h2002000A,  // RAM[0]：addi $2, $0, 10  → $2=10（out[0]）
@@ -52,6 +54,64 @@ structure文件夹按逻辑对模块进行了分类，方便查看和修改
     32'h00E00008,  // RAM[19]：jr $7          → 跳转到RAM[20]（多跳1行，无越界）
     32'h00000000   // RAM[20]：nop            → 程序正常结束
 ```
+
+## 冲突解决逻辑
+
+#### -- 逻辑推导
+
+这里实现的流水线mips处理器通过重定向（`Forwarding`）解决`RAW`数据冲突，通过`Stall`/`Flush`解决`lw`的周期延迟与分支跳转产生的控制冲突，但是没有做分支预测，导致处理一个lw需要额外1周期/气泡，处理一个分支指令需要额外2周期/气泡，一个jump需要额外1周期/气泡
+
+
+| 指令组合场景                | 无转发/无预测 气泡数 | 有转发/无预测 气泡数 | 核心判定依据（备注）|
+|-----------------------------|----------------------|----------------------|-------------------------------------------|
+| lw + 依赖ALU指令            | 1                    | 1                    | lw需M段取数，依赖指令E段需数，转发无解，必插1泡 |
+| lw + 依赖branch指令         | 2                    | 2                    | 1泡等lw数据就绪，1泡为branch本身控制冲突，叠加共2泡 |
+| lw + 依赖jump指令           | 1                    | 1                    | 仅需1泡等lw数据，jump在D段判定，无额外控制冲突开销 |
+| ALU指令 + 依赖ALU指令       | 2                    | 0                    | 无转发数据晚2拍需2泡，有转发直接传E段，无需气泡 |
+| ALU指令 + 依赖branch指令    | 2                    | 1                    | 转发消除1个数据冲突泡，保留branch本身1个控制冲突泡 |
+| 普通branch指令（无依赖）    | 2                    | 2                    | branch需E段判定，冲刷F/D段预取指令，固定2泡 |
+| 普通jump指令（无依赖）      | 1                    | 1                    | jump在D段判定，仅冲刷F段预取指令，固定1泡 |
+
+
+
+#### -- 涉及代码
+
+```
+always_comb begin
+    if ((RsE != 0) && (RsE == WriteRegM) && RegWriteM) ForwardAE = 2'b10;
+    else if ((RsE != 0) && (RsE == WriteRegW) && RegWriteW) ForwardAE = 2'b01;
+    else ForwardAE = 2'b00;
+
+    if ((RtE != 0) && (RtE == WriteRegM) && RegWriteM) ForwardBE = 2'b10;
+    else if ((RtE != 0) && (RtE == WriteRegW) && RegWriteW) ForwardBE = 2'b01;
+    else ForwardBE = 2'b00;
+
+    lwstall = ((RsD == RtE) || (RtD == RtE)) && MemtoRegE;
+
+    ForwardAD = (RsD != 0) && (RsD == WriteRegM) && RegWriteM;
+    ForwardBD = (RtD != 0) && (RtD == WriteRegM) && RegWriteM;
+
+    branchstall = (BranchEQD | BranchNED) && RegWriteE && (WriteRegE == RsD || WriteRegE == RtD) 
+                || (BranchEQD | BranchNED) && MemtoRegM && (WriteRegM == RsD || WriteRegM == RtD);
+
+    StallF = (lwstall | branchstall | JumpRegD);
+    StallD = (lwstall | branchstall | JumpRegD);
+    FlushE = (lwstall | branchstall | JumpRegD);
+
+    //注意，这里与课本上的不同在于加了Jump判断
+
+end 
+```
+
+## 仿真波形解读示例
+
+<img width="1263" height="871" alt="image" src="https://github.com/user-attachments/assets/f4ee48eb-3e20-4d85-b930-832236a4bb88" />
+
+<img width="1263" height="871" alt="波形解读" src="https://github.com/user-attachments/assets/348db039-d0d0-424f-8da9-cdde06ff274e" />
+
+
+
+
 
 
 
